@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coordinate Converter & Route Planner</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #667eea);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .docs-button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .docs-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        #map {
+            height: 450px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .map-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .button-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .result-item:hover {
+            background: #f0f0f0;
+            transform: translateX(5px);
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #2196F3;
+        }
+
+        .swap-button {
+            font-size: 20px;
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        .route-info {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border-left: 4px solid #2196F3;
+        }
+
+        .route-alternative {
+            border-left-color: #81D4FA;
+        }
+
+        .traffic-clear { color: #2196F3; }
+        .traffic-light { color: #FF9800; }
+        .traffic-heavy { color: #FF5722; }
+        .traffic-severe { color: #f44336; font-weight: bold; }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .error {
+            color: #f44336;
+            margin-top: 10px;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 6px;
+        }
+
+        .success {
+            color: #4caf50;
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 6px;
+        }
+
+        .picker-button {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            margin-top: 5px;
+        }
+
+        .picker-active {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            animation: pulse 1s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🗺️ Coordinate Converter & Route Planner</h1>
+            <a href="/docs" target="_blank" class="docs-button">📚 View Documentation</a>
+        </header>
+
+        <!-- Interactive Map -->
+        <div class="glass-panel">
+            <h2>Interactive Map View</h2>
+            <div id="map"></div>
+            <div class="map-controls">
+                <button onclick="clearMarkers()">🗑️ Clear Markers</button>
+                <button onclick="resetView()">🏠 Reset View</button>
+                <button onclick="fitBounds()">🔍 Fit to Markers</button>
+            </div>
+        </div>
+
+        <!-- Address Search -->
+        <div class="glass-panel">
+            <h2>🔍 Address Search</h2>
+            <div class="input-group">
+                <label for="addressInput">Enter an address to search</label>
+                <input type="text" id="addressInput" placeholder="e.g., Times Square, New York">
+            </div>
+            <button onclick="searchAddress()">Search</button>
+            <div id="searchResults"></div>
+        </div>
+
+        <!-- Distance Calculator -->
+        <div class="glass-panel">
+            <h2>📍 Distance Calculator with Traffic</h2>
+            
+            <div class="grid-2">
+                <div>
+                    <div class="input-group">
+                        <label for="sourceAddress">Source Address</label>
+                        <input type="text" id="sourceAddress" placeholder="Starting location">
+                        <button class="picker-button" id="sourcePickerBtn" onclick="pickLocation('source')">📍 Pick on Map</button>
+                    </div>
+                </div>
+                <div>
+                    <div class="input-group">
+                        <label for="destAddress">Destination Address</label>
+                        <input type="text" id="destAddress" placeholder="Ending location">
+                        <button class="picker-button" id="destPickerBtn" onclick="pickLocation('destination')">📍 Pick on Map</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <button class="swap-button" onclick="swapLocations()">🔄</button>
+            </div>
+
+            <div class="input-group">
+                <label for="trafficTime">Traffic Time</label>
+                <select id="trafficTime">
+                    <option value="current">Current</option>
+                    <option value="morning">Morning Rush (7-9 AM)</option>
+                    <option value="midday">Mid-Day (12-2 PM)</option>
+                    <option value="evening">Evening Rush (5-7 PM)</option>
+                    <option value="night">Night (11 PM - 5 AM)</option>
+                    <option value="weekend">Weekend</option>
+                </select>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="showTrafficColors" checked>
+                <label for="showTrafficColors">Show Traffic Congestion Colors</label>
+            </div>
+
+            <button onclick="calculateRoute()">Calculate Routes</button>
+            <div id="routeResults"></div>
+        </div>
+
+        <!-- Coordinate Converters -->
+        <div class="grid-2">
+            <div class="glass-panel">
+                <h2>X,Y → Lat/Lon</h2>
+                <div class="input-group">
+                    <label for="xInput">X (meters)</label>
+                    <input type="number" id="xInput" placeholder="e.g., -8238310.724">
+                </div>
+                <div class="input-group">
+                    <label for="yInput">Y (meters)</label>
+                    <input type="number" id="yInput" placeholder="e.g., 4970241.327">
+                </div>
+                <div class="button-group">
+                    <button onclick="convertXYtoLatLon()">Convert</button>
+                    <button class="button-secondary" onclick="clearXY()">Clear</button>
+                </div>
+                <div id="xyResult"></div>
+            </div>
+
+            <div class="glass-panel">
+                <h2>Lat/Lon → X,Y</h2>
+                <div class="input-group">
+                    <label for="latInput">Latitude</label>
+                    <input type="number" id="latInput" placeholder="e.g., 40.748817" step="any">
+                </div>
+                <div class="input-group">
+                    <label for="lonInput">Longitude</label>
+                    <input type="number" id="lonInput" placeholder="e.g., -73.985428" step="any">
+                </div>
+                <div class="button-group">
+                    <button onclick="convertLatLontoXY()">Convert</button>
+                    <button class="button-secondary" onclick="clearLatLon()">Clear</button>
+                </div>
+                <div id="latlonResult"></div>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <strong>ℹ️ About Web Mercator (EPSG:3857)</strong>
+            <p>This app uses the Web Mercator projection system for coordinate conversion. It's the same system used by most web mapping services like Google Maps and OpenStreetMap.</p>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // Initialize map
+        let map = L.map('map').setView([20, 0], 2);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        let markers = [];
+        let routeLayers = [];
+        let pickingMode = null;
+        let manualCoords = { source: null, destination: null };
+
+        // Clear all markers
+        function clearMarkers() {
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+        }
+
+        // Reset map view
+        function resetView() {
+            map.setView([20, 0], 2);
+        }
+
+        // Fit map to all markers
+        function fitBounds() {
+            if (markers.length > 0) {
+                const group = L.featureGroup(markers);
+                map.fitBounds(group.getBounds(), { padding: [50, 50] });
+            }
+        }
+
+        // Add marker to map
+        function addMarker(lat, lon, color, popupText) {
+            const marker = L.circleMarker([lat, lon], {
+                radius: 8,
+                fillColor: color,
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+            
+            if (popupText) {
+                marker.bindPopup(popupText);
+            }
+            
+            markers.push(marker);
+            return marker;
+        }
+
+        // Clear route layers
+        function clearRoutes() {
+            routeLayers.forEach(layer => map.removeLayer(layer));
+            routeLayers = [];
+        }
+
+        // X,Y to Lat/Lon conversion
+        async function convertXYtoLatLon() {
+            const x = document.getElementById('xInput').value;
+            const y = document.getElementById('yInput').value;
+            const resultDiv = document.getElementById('xyResult');
+
+            if (!x || !y) {
+                resultDiv.innerHTML = '<div class="error">Please enter both X and Y values</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/convert/xy-to-latlon', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ x: parseFloat(x), y: parseFloat(y) })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    resultDiv.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result-box">
+                            <strong>Result:</strong><br>
+                            Latitude: ${data.lat}°<br>
+                            Longitude: ${data.lon}°
+                        </div>
+                    `;
+                    
+                    // Add blue marker for X,Y conversion
+                    addMarker(data.lat, data.lon, '#2196F3', 
+                        `X,Y → Lat/Lon<br>Lat: ${data.lat}°<br>Lon: ${data.lon}°`);
+                    fitBounds();
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Lat/Lon to X,Y conversion
+        async function convertLatLontoXY() {
+            const lat = document.getElementById('latInput').value;
+            const lon = document.getElementById('lonInput').value;
+            const resultDiv = document.getElementById('latlonResult');
+
+            if (!lat || !lon) {
+                resultDiv.innerHTML = '<div class="error">Please enter both Latitude and Longitude values</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/convert/latlon-to-xy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lat: parseFloat(lat), lon: parseFloat(lon) })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    resultDiv.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result-box">
+                            <strong>Result:</strong><br>
+                            X: ${data.x} m<br>
+                            Y: ${data.y} m
+                        </div>
+                    `;
+                    
+                    // Add green marker for Lat/Lon conversion
+                    const latVal = parseFloat(lat);
+                    const lonVal = parseFloat(lon);
+                    addMarker(latVal, lonVal, '#4CAF50', 
+                        `Lat/Lon → X,Y<br>X: ${data.x} m<br>Y: ${data.y} m`);
+                    fitBounds();
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Clear X,Y inputs
+        function clearXY() {
+            document.getElementById('xInput').value = '';
+            document.getElementById('yInput').value = '';
+            document.getElementById('xyResult').innerHTML = '';
+        }
+
+        // Clear Lat/Lon inputs
+        function clearLatLon() {
+            document.getElementById('latInput').value = '';
+            document.getElementById('lonInput').value = '';
+            document.getElementById('latlonResult').innerHTML = '';
+        }
+
+        // Search address
+        async function searchAddress() {
+            const address = document.getElementById('addressInput').value;
+            const resultsDiv = document.getElementById('searchResults');
+
+            if (!address) {
+                resultsDiv.innerHTML = '<div class="error">Please enter an address</div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="success">Searching...</div>';
+
+            try {
+                const response = await fetch('/api/geocode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    resultsDiv.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                } else if (data.results.length === 0) {
+                    resultsDiv.innerHTML = '<div class="error">No results found</div>';
+                } else {
+                    let html = '<div class="result-box">';
+                    data.results.forEach((result, idx) => {
+                        html += `
+                            <div class="result-item" onclick="showLocationOnMap(${result.lat}, ${result.lon}, '${result.display_name.replace(/'/g, "\\'")}')">
+                                <strong>Result ${idx + 1}:</strong><br>
+                                ${result.display_name}<br>
+                                <small>Lat: ${result.lat}, Lon: ${result.lon}<br>
+                                X: ${result.x}, Y: ${result.y}</small><br>
+                                <button style="margin-top: 5px;" onclick="event.stopPropagation(); showLocationOnMap(${result.lat}, ${result.lon}, '${result.display_name.replace(/'/g, "\\'")}')">
+                                    📍 Show on Map
+                                </button>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    resultsDiv.innerHTML = html;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Show location on map
+        function showLocationOnMap(lat, lon, name) {
+            addMarker(lat, lon, '#FF5722', name);
+            map.setView([lat, lon], 13);
+        }
+
+        // Pick location on map
+        function pickLocation(type) {
+            pickingMode = type;
+            const btnId = type === 'source' ? 'sourcePickerBtn' : 'destPickerBtn';
+            const btn = document.getElementById(btnId);
+            
+            // Reset other button
+            const otherBtnId = type === 'source' ? 'destPickerBtn' : 'sourcePickerBtn';
+            document.getElementById(otherBtnId).classList.remove('picker-active');
+            
+            btn.classList.add('picker-active');
+            btn.textContent = '📍 Click on map...';
+
+            map.once('click', async function(e) {
+                const lat = e.latlng.lat;
+                const lon = e.latlng.lng;
+                
+                manualCoords[type] = { lat, lon };
+                
+                // Reverse geocode to get address
+                try {
+                    const response = await fetch('/api/reverse-geocode', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ lat, lon })
+                    });
+                    const data = await response.json();
+                    
+                    const inputId = type === 'source' ? 'sourceAddress' : 'destAddress';
+                    document.getElementById(inputId).value = data.address;
+                    
+                    // Add marker
+                    addMarker(lat, lon, type === 'source' ? '#4CAF50' : '#FF5722', 
+                        `${type === 'source' ? 'Source' : 'Destination'}<br>${data.address}`);
+                    
+                } catch (error) {
+                    console.error('Reverse geocoding failed:', error);
+                }
+                
+                btn.classList.remove('picker-active');
+                btn.textContent = '📍 Pick on Map';
+                pickingMode = null;
+            });
+        }
+
+        // Swap source and destination
+        async function swapLocations() {
+            const sourceInput = document.getElementById('sourceAddress');
+            const destInput = document.getElementById('destAddress');
+            
+            // Swap text inputs
+            const temp = sourceInput.value;
+            sourceInput.value = destInput.value;
+            destInput.value = temp;
+            
+            // Swap manual coordinates
+            const tempCoords = manualCoords.source;
+            manualCoords.source = manualCoords.destination;
+            manualCoords.destination = tempCoords;
+            
+            // Clear and redraw markers if coordinates exist
+            clearMarkers();
+            if (manualCoords.source) {
+                addMarker(manualCoords.source.lat, manualCoords.source.lon, '#4CAF50', 
+                    `Source<br>${sourceInput.value}`);
+            }
+            if (manualCoords.destination) {
+                addMarker(manualCoords.destination.lat, manualCoords.destination.lon, '#FF5722', 
+                    `Destination<br>${destInput.value}`);
+            }
+        }
+
+        // Calculate route
+        async function calculateRoute() {
+            const sourceAddress = document.getElementById('sourceAddress').value;
+            const destAddress = document.getElementById('destAddress').value;
+            const trafficTime = document.getElementById('trafficTime').value;
+            const resultsDiv = document.getElementById('routeResults');
+
+            if (!sourceAddress || !destAddress) {
+                resultsDiv.innerHTML = '<div class="error">Please enter both source and destination addresses</div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="success">Calculating routes...</div>';
+
+            try {
+                // Geocode addresses if manual coordinates not set
+                let sourceLat, sourceLon, destLat, destLon;
+
+                if (manualCoords.source) {
+                    sourceLat = manualCoords.source.lat;
+                    sourceLon = manualCoords.source.lon;
+                } else {
+                    const sourceGeo = await fetch('/api/geocode', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ address: sourceAddress })
+                    });
+                    const sourceData = await sourceGeo.json();
+                    if (sourceData.results.length === 0) {
+                        resultsDiv.innerHTML = '<div class="error">Source address not found</div>';
+                        return;
+                    }
+                    sourceLat = sourceData.results[0].lat;
+                    sourceLon = sourceData.results[0].lon;
+                }
+
+                if (manualCoords.destination) {
+                    destLat = manualCoords.destination.lat;
+                    destLon = manualCoords.destination.lon;
+                } else {
+                    const destGeo = await fetch('/api/geocode', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ address: destAddress })
+                    });
+                    const destData = await destGeo.json();
+                    if (destData.results.length === 0) {
+                        resultsDiv.innerHTML = '<div class="error">Destination address not found</div>';
+                        return;
+                    }
+                    destLat = destData.results[0].lat;
+                    destLon = destData.results[0].lon;
+                }
+
+                // Calculate route
+                const routeResponse = await fetch('/api/route', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        source_lat: sourceLat,
+                        source_lon: sourceLon,
+                        dest_lat: destLat,
+                        dest_lon: destLon,
+                        traffic_time: trafficTime
+                    })
+                });
+
+                const routeData = await routeResponse.json();
+
+                if (routeData.error) {
+                    resultsDiv.innerHTML = `<div class="error">Error: ${routeData.error}</div>`;
+                    return;
+                }
+
+                // Clear previous routes
+                clearRoutes();
+
+                // Show traffic colors option
+                const showTraffic = document.getElementById('showTrafficColors').checked;
+
+                // Display routes
+                let html = '<div class="result-box">';
+                routeData.routes.forEach((route, idx) => {
+                    const routeType = route.route_type === 'main' ? 'Main Route' : `Alternative ${idx}`;
+                    const trafficClass = `traffic-${route.traffic_level}`;
+                    
+                    html += `
+                        <div class="route-info ${route.route_type === 'alternative' ? 'route-alternative' : ''}">
+                            <strong>${routeType}</strong><br>
+                            Distance: ${route.distance_km} km (${route.distance_mi} mi)<br>
+                            Base Time: ${route.duration_min} min<br>
+                            With Traffic: <span class="${showTraffic ? trafficClass : ''}">${route.traffic_duration_min} min</span><br>
+                            ${showTraffic ? `Traffic Level: <span class="${trafficClass}">${route.traffic_level}</span>` : ''}
+                        </div>
+                    `;
+
+                    // Draw route on map
+                    const color = route.route_type === 'main' ? '#2196F3' : '#81D4FA';
+                    const weight = route.route_type === 'main' ? 6 : 4;
+                    
+                    let routeColor = color;
+                    if (showTraffic) {
+                        if (route.traffic_level === 'clear') routeColor = '#2196F3';
+                        else if (route.traffic_level === 'light') routeColor = '#FF9800';
+                        else if (route.traffic_level === 'heavy') routeColor = '#FF5722';
+                        else if (route.traffic_level === 'severe') routeColor = '#f44336';
+                    }
+
+                    const routeLayer = L.geoJSON(route.geometry, {
+                        style: {
+                            color: routeColor,
+                            weight: weight,
+                            opacity: 0.8,
+                            dashArray: route.traffic_level === 'severe' && showTraffic ? '10, 10' : null
+                        }
+                    }).addTo(map);
+
+                    routeLayer.bindPopup(`
+                        <strong>${routeType}</strong><br>
+                        ${route.distance_km} km - ${route.traffic_duration_min} min
+                    `);
+
+                    routeLayers.push(routeLayer);
+                });
+                html += '</div>';
+                resultsDiv.innerHTML = html;
+
+                // Add markers for source and destination
+                clearMarkers();
+                addMarker(sourceLat, sourceLon, '#4CAF50', `Source: ${sourceAddress}`);
+                addMarker(destLat, destLon, '#FF5722', `Destination: ${destAddress}`);
+                
+                fitBounds();
+
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

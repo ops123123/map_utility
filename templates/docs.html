@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - Coordinate Converter & Route Planner</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #667eea);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .docs-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            background: #e0e0e0;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            color: #667eea;
+            margin: 25px 0 15px 0;
+            font-size: 1.8em;
+        }
+
+        h3 {
+            color: #764ba2;
+            margin: 20px 0 10px 0;
+            font-size: 1.3em;
+        }
+
+        p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .info-box {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid;
+        }
+
+        .info-box.blue {
+            background: #e3f2fd;
+            border-color: #2196F3;
+        }
+
+        .info-box.green {
+            background: #e8f5e9;
+            border-color: #4CAF50;
+        }
+
+        .info-box.orange {
+            background: #fff3e0;
+            border-color: #FF9800;
+        }
+
+        .info-box.purple {
+            background: #f3e5f5;
+            border-color: #9c27b0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d32f2f;
+        }
+
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .example-box {
+            background: #f9f9f9;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Documentation</h1>
+            <a href="/" class="back-button">← Back to App</a>
+        </header>
+
+        <div class="docs-panel">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('overview')">Overview</button>
+                <button class="tab" onclick="showTab('conversion')">Conversion</button>
+                <button class="tab" onclick="showTab('search')">Address Search</button>
+                <button class="tab" onclick="showTab('calculator')">Distance Calculator</button>
+                <button class="tab" onclick="showTab('map')">Map Features</button>
+                <button class="tab" onclick="showTab('tips')">Tips & Tricks</button>
+                <button class="tab" onclick="showTab('faq')">FAQ</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div id="overview" class="tab-content active">
+                <h2>Welcome to the Coordinate Converter & Route Planner</h2>
+                
+                <p>This application is a comprehensive web-based tool for coordinate conversion, geocoding, and route planning with traffic visualization. It combines multiple mapping features into one powerful interface.</p>
+
+                <div class="info-box blue">
+                    <strong>🎯 Key Features:</strong>
+                    <ul>
+                        <li>Bidirectional coordinate conversion (X,Y ↔ Lat/Lon)</li>
+                        <li>Interactive map with marker placement</li>
+                        <li>Address geocoding and reverse geocoding</li>
+                        <li>Route calculation with traffic simulation</li>
+                        <li>Multiple route alternatives</li>
+                        <li>Manual location picking on map</li>
+                        <li>Traffic congestion visualization</li>
+                    </ul>
+                </div>
+
+                <h3>Technology Stack</h3>
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Technology</th>
+                    </tr>
+                    <tr>
+                        <td>Backend</td>
+                        <td>Flask (Python 3.x)</td>
+                    </tr>
+                    <tr>
+                        <td>Frontend</td>
+                        <td>HTML5, CSS3, JavaScript</td>
+                    </tr>
+                    <tr>
+                        <td>Mapping</td>
+                        <td>Leaflet.js with OpenStreetMap tiles</td>
+                    </tr>
+                    <tr>
+                        <td>Geocoding</td>
+                        <td>Nominatim API</td>
+                    </tr>
+                    <tr>
+                        <td>Routing</td>
+                        <td>OSRM (Open Source Routing Machine)</td>
+                    </tr>
+                    <tr>
+                        <td>Projections</td>
+                        <td>pyproj (EPSG:4326 ↔ EPSG:3857)</td>
+                    </tr>
+                </table>
+
+                <div class="info-box green">
+                    <strong>✨ What's Special:</strong>
+                    <p>This app uses the Web Mercator projection (EPSG:3857) for coordinate conversion - the same system used by Google Maps, Bing Maps, and most web mapping services. This makes it perfect for converting between display coordinates and geographic coordinates.</p>
+                </div>
+            </div>
+
+            <!-- Conversion Tab -->
+            <div id="conversion" class="tab-content">
+                <h2>Coordinate Conversion</h2>
+
+                <p>The app provides two-way conversion between Web Mercator (X,Y) coordinates and WGS84 (Lat/Lon) geographic coordinates.</p>
+
+                <h3>X,Y to Lat/Lon Converter</h3>
+                <div class="info-box blue">
+                    <strong>Purpose:</strong> Convert Web Mercator coordinates (in meters) to latitude/longitude degrees.
+                </div>
+
+                <div class="example-box">
+                    <strong>Example:</strong><br>
+                    Input: X = -8238310.724, Y = 4970241.327<br>
+                    Output: Lat = 40.74881700°, Lon = -73.98542800°<br>
+                    (This is Times Square, New York!)
+                </div>
+
+                <p><strong>Features:</strong></p>
+                <ul>
+                    <li>Enter X and Y values in meters</li>
+                    <li>Results shown with 8 decimal precision for lat/lon</li>
+                    <li>Adds a <strong style="color: #2196F3;">blue marker</strong> to the map</li>
+                    <li>Automatically zooms to show the location</li>
+                    <li>Clear button to reset inputs</li>
+                </ul>
+
+                <h3>Lat/Lon to X,Y Converter</h3>
+                <div class="info-box green">
+                    <strong>Purpose:</strong> Convert latitude/longitude degrees to Web Mercator coordinates (in meters).
+                </div>
+
+                <div class="example-box">
+                    <strong>Example:</strong><br>
+                    Input: Lat = 40.748817, Lon = -73.985428<br>
+                    Output: X = -8238310.724000 m, Y = 4970241.327000 m
+                </div>
+
+                <p><strong>Features:</strong></p>
+                <ul>
+                    <li>Enter latitude and longitude in degrees</li>
+                    <li>Results shown with 6 decimal precision for X/Y</li>
+                    <li>Adds a <strong style="color: #4CAF50;">green marker</strong> to the map</li>
+                    <li>Automatically zooms to show the location</li>
+                    <li>Clear button to reset inputs</li>
+                </ul>
+
+                <h3>About Coordinate Systems</h3>
+                <table>
+                    <tr>
+                        <th>System</th>
+                        <th>Code</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>WGS84</td>
+                        <td>EPSG:4326</td>
+                        <td>Standard GPS coordinates (latitude/longitude in degrees)</td>
+                    </tr>
+                    <tr>
+                        <td>Web Mercator</td>
+                        <td>EPSG:3857</td>
+                        <td>Projected coordinates used by web maps (X/Y in meters)</td>
+                    </tr>
+                </table>
+
+                <div class="info-box orange">
+                    <strong>⚠️ Note:</strong> Web Mercator projection distorts areas near the poles. It's accurate for most populated areas but should not be used for high-latitude regions (above 85°N or below 85°S).
+                </div>
+            </div>
+
+            <!-- Search Tab -->
+            <div id="search" class="tab-content">
+                <h2>Address Search</h2>
+
+                <p>Search for any address, place name, or point of interest worldwide using the OpenStreetMap Nominatim geocoding service.</p>
+
+                <h3>How to Use</h3>
+                <ol>
+                    <li>Enter an address or place name in the search field</li>
+                    <li>Click the <strong>Search</strong> button</li>
+                    <li>Review up to 5 results with detailed information</li>
+                    <li>Click <strong>"Show on Map"</strong> to view the location</li>
+                </ol>
+
+                <h3>Search Examples</h3>
+                <div class="example-box">
+                    <strong>By Landmark:</strong> "Eiffel Tower, Paris"<br>
+                    <strong>By Address:</strong> "1600 Pennsylvania Avenue, Washington DC"<br>
+                    <strong>By Coordinates:</strong> "40.7484, -73.9857"<br>
+                    <strong>By Place:</strong> "Central Park, New York"<br>
+                    <strong>By Region:</strong> "Tokyo, Japan"
+                </div>
+
+                <h3>Result Information</h3>
+                <p>Each search result includes:</p>
+                <ul>
+                    <li><strong>Display Name:</strong> Full formatted address</li>
+                    <li><strong>Latitude & Longitude:</strong> WGS84 coordinates (8 decimal places)</li>
+                    <li><strong>X & Y:</strong> Web Mercator coordinates (6 decimal places)</li>
+                    <li><strong>Show on Map button:</strong> Instantly view location with a <strong style="color: #FF5722;">red marker</strong></li>
+                </ul>
+
+                <div class="info-box purple">
+                    <strong>💡 Pro Tip:</strong> The geocoder supports multiple languages and formats. Try searching in different languages or using local address formats for better results!
+                </div>
+
+                <h3>Rate Limiting</h3>
+                <div class="info-box orange">
+                    <strong>⚠️ Important:</strong> The Nominatim service has usage limits. There is a 1-second delay between requests to comply with their fair use policy. Please be patient when searching!
+                </div>
+            </div>
+
+            <!-- Calculator Tab -->
+            <div id="calculator" class="tab-content">
+                <h2>Distance Calculator with Traffic</h2>
+
+                <p>Calculate driving routes between two locations with traffic simulation and multiple alternative routes.</p>
+
+                <h3>Basic Usage</h3>
+                <ol>
+                    <li>Enter source and destination addresses</li>
+                    <li>Select traffic time period (optional)</li>
+                    <li>Enable/disable traffic color visualization</li>
+                    <li>Click <strong>Calculate Routes</strong></li>
+                    <li>View main route + up to 2 alternatives</li>
+                </ol>
+
+                <h3>Manual Location Picking</h3>
+                <p>Instead of typing addresses, you can pick exact locations on the map:</p>
+                <ol>
+                    <li>Click the <strong>"📍 Pick on Map"</strong> button for source or destination</li>
+                    <li>Button turns orange and says "Click on map..."</li>
+                    <li>Click anywhere on the map to set the location</li>
+                    <li>Address is automatically filled via reverse geocoding</li>
+                    <li>A marker appears at the selected location</li>
+                </ol>
+
+                <div class="info-box green">
+                    <strong>✨ Tip:</strong> Manual picking is perfect for precise locations like building entrances, parking lots, or specific intersections!
+                </div>
+
+                <h3>Swap Function</h3>
+                <p>The <strong>🔄 swap button</strong> instantly reverses your source and destination, including:</p>
+                <ul>
+                    <li>Text input fields</li>
+                    <li>Manual coordinates (if set)</li>
+                    <li>Map markers</li>
+                </ul>
+
+                <h3>Traffic Time Periods</h3>
+                <table>
+                    <tr>
+                        <th>Period</th>
+                        <th>Time Range</th>
+                        <th>Multiplier</th>
+                        <th>Impact</th>
+                    </tr>
+                    <tr>
+                        <td>Current</td>
+                        <td>Default</td>
+                        <td>1.0x</td>
+                        <td>No adjustment</td>
+                    </tr>
+                    <tr>
+                        <td>Morning Rush</td>
+                        <td>7-9 AM</td>
+                        <td>1.5x</td>
+                        <td>+50% travel time</td>
+                    </tr>
+                    <tr>
+                        <td>Mid-Day</td>
+                        <td>12-2 PM</td>
+                        <td>1.1x</td>
+                        <td>+10% travel time</td>
+                    </tr>
+                    <tr>
+                        <td>Evening Rush</td>
+                        <td>5-7 PM</td>
+                        <td>1.6x</td>
+                        <td>+60% travel time</td>
+                    </tr>
+                    <tr>
+                        <td>Night</td>
+                        <td>11 PM - 5 AM</td>
+                        <td>0.9x</td>
+                        <td>-10% travel time</td>
+                    </tr>
+                    <tr>
+                        <td>Weekend</td>
+                        <td>Sat-Sun</td>
+                        <td>1.0x</td>
+                        <td>No adjustment</td>
+                    </tr>
+                </table>
+
+                <h3>Route Information</h3>
+                <p>For each route, you'll see:</p>
+                <ul>
+                    <li><strong>Distance:</strong> In kilometers and miles</li>
+                    <li><strong>Base Time:</strong> Duration without traffic</li>
+                    <li><strong>With Traffic:</strong> Adjusted duration based on selected time</li>
+                    <li><strong>Traffic Level:</strong> Clear, Light, Heavy, or Severe</li>
+                </ul>
+
+                <h3>Traffic Visualization</h3>
+                <div class="info-box blue">
+                    <strong>When "Show Traffic Congestion Colors" is checked:</strong>
+                    <ul>
+                        <li><strong style="color: #2196F3;">Blue:</strong> Clear - normal traffic</li>
+                        <li><strong style="color: #FF9800;">Orange:</strong> Light - slight delays</li>
+                        <li><strong style="color: #FF5722;">Red-Orange:</strong> Heavy - significant delays</li>
+                        <li><strong style="color: #f44336;">Red (dashed):</strong> Severe - major congestion</li>
+                    </ul>
+                </div>
+
+                <h3>Alternative Routes</h3>
+                <p>The app shows up to 3 routes:</p>
+                <ul>
+                    <li><strong>Main Route:</strong> Fastest or most direct (thicker line)</li>
+                    <li><strong>Alternative 1 & 2:</strong> Other viable options (thinner lines)</li>
+                </ul>
+
+                <p>Click any route line to see a popup with details.</p>
+            </div>
+
+            <!-- Map Tab -->
+            <div id="map" class="tab-content">
+                <h2>Map Features</h2>
+
+                <p>The interactive map is the central element of the application, displaying all locations, markers, and routes.</p>
+
+                <h3>Map Controls</h3>
+                <table>
+                    <tr>
+                        <th>Button</th>
+                        <th>Function</th>
+                    </tr>
+                    <tr>
+                        <td>🗑️ Clear Markers</td>
+                        <td>Remove all markers from the map</td>
+                    </tr>
+                    <tr>
+                        <td>🏠 Reset View</td>
+                        <td>Return to default world view (zoom level 2)</td>
+                    </tr>
+                    <tr>
+                        <td>🔍 Fit to Markers</td>
+                        <td>Auto-zoom to show all markers with padding</td>
+                    </tr>
+                </table>
+
+                <h3>Marker Colors</h3>
+                <div class="info-box blue">
+                    <strong style="color: #2196F3;">🔵 Blue:</strong> X,Y → Lat/Lon conversion result
+                </div>
+                <div class="info-box green">
+                    <strong style="color: #4CAF50;">🟢 Green:</strong> Lat/Lon → X,Y conversion result or route source
+                </div>
+                <div class="info-box orange">
+                    <strong style="color: #FF5722;">🔴 Red:</strong> Address search result or route destination
+                </div>
+
+                <h3>Map Interactions</h3>
+                <ul>
+                    <li><strong>Click markers:</strong> View popup with location details</li>
+                    <li><strong>Click routes:</strong> See route information (distance, time)</li>
+                    <li><strong>Zoom:</strong> Use mouse wheel or +/- buttons</li>
+                    <li><strong>Pan:</strong> Click and drag to move the map</li>
+                    <li><strong>Pick location:</strong> Click after enabling manual picker</li>
+                </ul>
+
+                <h3>Map Specifications</h3>
+                <table>
+                    <tr>
+                        <th>Property</th>
+                        <th>Value</th>
+                    </tr>
+                    <tr>
+                        <td>Height</td>
+                        <td>450 pixels</td>
+                    </tr>
+                    <tr>
+                        <td>Default Center</td>
+                        <td>20°N, 0°E (world view)</td>
+                    </tr>
+                    <tr>
+                        <td>Default Zoom</td>
+                        <td>Level 2</td>
+                    </tr>
+                    <tr>
+                        <td>Max Zoom</td>
+                        <td>Level 19</td>
+                    </tr>
+                    <tr>
+                        <td>Tiles</td>
+                        <td>OpenStreetMap</td>
+                    </tr>
+                </table>
+
+                <div class="info-box purple">
+                    <strong>💡 Did You Know?</strong> The map automatically centers and zooms to show your results! After conversions or searches, it will adjust to display your markers optimally.
+                </div>
+            </div>
+
+            <!-- Tips Tab -->
+            <div id="tips" class="tab-content">
+                <h2>Tips & Tricks</h2>
+
+                <h3>🎯 Best Practices</h3>
+                
+                <div class="info-box green">
+                    <strong>For Accurate Conversions:</strong>
+                    <ul>
+                        <li>Use full precision values when available</li>
+                        <li>Web Mercator works best between 85°N and 85°S</li>
+                        <li>Double-check coordinate order (X/Lon comes before Y/Lat in many systems)</li>
+                    </ul>
+                </div>
+
+                <div class="info-box blue">
+                    <strong>For Better Geocoding:</strong>
+                    <ul>
+                        <li>Include city and country for ambiguous place names</li>
+                        <li>Use official address formats when possible</li>
+                        <li>Try different variations if first search fails</li>
+                        <li>Be patient - 1 second delay between requests is normal</li>
+                    </ul>
+                </div>
+
+                <div class="info-box orange">
+                    <strong>For Route Planning:</strong>
+                    <ul>
+                        <li>Use manual picking for precise start/end points</li>
+                        <li>Compare alternative routes before deciding</li>
+                        <li>Consider traffic times for realistic planning</li>
+                        <li>Remember: traffic multipliers are simulated, not real-time</li>
+                    </ul>
+                </div>
+
+                <h3>⚡ Productivity Shortcuts</h3>
+                <ol>
+                    <li><strong>Quick View:</strong> After any conversion/search, use "Fit to Markers" to see everything</li>
+                    <li><strong>Clear Start:</strong> Use "Clear Markers" before starting a new task</li>
+                    <li><strong>Route Comparison:</strong> Leave traffic colors on to visually compare congestion</li>
+                    <li><strong>Precise Placement:</strong> Zoom in close before using manual picker</li>
+                    <li><strong>Reverse Trip:</strong> Use swap button to quickly plan return journey</li>
+                </ol>
+
+                <h3>🔧 Troubleshooting</h3>
+                <table>
+                    <tr>
+                        <th>Issue</th>
+                        <th>Solution</th>
+                    </tr>
+                    <tr>
+                        <td>No search results</td>
+                        <td>Try broader search terms or different spelling</td>
+                    </tr>
+                    <tr>
+                        <td>Conversion error</td>
+                        <td>Check that coordinates are within valid range</td>
+                    </tr>
+                    <tr>
+                        <td>Route not found</td>
+                        <td>Ensure locations are accessible by road</td>
+                    </tr>
+                    <tr>
+                        <td>Markers not visible</td>
+                        <td>Click "Fit to Markers" or check if they're off-screen</td>
+                    </tr>
+                    <tr>
+                        <td>Slow response</td>
+                        <td>External APIs may be busy - wait and retry</td>
+                    </tr>
+                </table>
+
+                <h3>📱 Mobile Usage</h3>
+                <p>The app is fully responsive! On mobile devices:</p>
+                <ul>
+                    <li>Sections stack vertically for easier scrolling</li>
+                    <li>Touch to interact with map and markers</li>
+                    <li>Pinch to zoom on the map</li>
+                    <li>All features work the same as desktop</li>
+                </ul>
+            </div>
+
+            <!-- FAQ Tab -->
+            <div id="faq" class="tab-content">
+                <h2>Frequently Asked Questions</h2>
+
+                <h3>General Questions</h3>
+                
+                <div class="example-box">
+                    <strong>Q: Is this app free to use?</strong><br>
+                    A: Yes! It uses free, open-source APIs and services.
+                </div>
+
+                <div class="example-box">
+                    <strong>Q: Do I need to create an account?</strong><br>
+                    A: No, the app works without any registration or login.
+                </div>
+
+                <div class="example-box">
+                    <strong>Q: What browsers are supported?</strong><br>
+                    A: All modern browsers (Chrome, Firefox, Safari, Edge). Internet Explorer is not supported.
+                </div>
+
+                <h3>Coordinate Conversion</h3>
+
+                <div class="example-box">
+                    <strong>Q: What's the difference between EPSG:4326 and EPSG:3857?</strong><br>
+                    A: EPSG:4326 (WGS84) uses latitude/longitude in degrees. EPSG:3857 (Web Mercator) uses projected X/Y coordinates in meters, commonly used by web maps.
+                </div>
+
+                <div class="example-box">
+                    <strong>Q: Why do my converted coordinates look different from other tools?</strong><br>
+                    A: Different tools may use different precisions or rounding. Our app uses high precision (8 decimals for lat/lon, 6 for X/Y) for accuracy.
+                </div>
+
+                <div class="example-box">
+                    <strong>Q: Can I convert coordinates at the poles?</strong><br>
+                    A: Web Mercator doesn't work beyond 85.05° latitude. For polar regions, use a different projection system.
+                </div>
+
+                <h3>Address Search & Geocoding</h3>
+
+                <div class="example-box">
+                    <strong>Q: Why is there a delay after searching?</strong><br>
+                    A: The Nominatim API requires a 1-second delay between requests to prevent abuse. This ensures the service remains free for everyone.
+                </div>
+
+                <div class="example-box">
+                    <strong>Q: Can I search for coordinates directly?</strong><br>
+                    A: Yes! Enter coordinates in "lat, lon" format (e.g., "40.7484, -73.9857").
+                </div>
+
+                <div class="example-box">
+                    <strong>Q: Why do I get multiple results?</strong><br>
+                    A: Many place names exist in multiple locations. For example, "Springfield" exists in over 30 U.S. states. Review all results to find the right one.
+                </div>
+
+                <h3>Route Planning</h3>
+
+                <div class="example-box">
+                    <strong>Q: Is the traffic data real-time?</strong><br>
+                    A: No, traffic adjustments are simulated based on typical patterns. For real-time traffic, use dedicated navigation apps.
+                </div>
+
+                <div class="example-box">
+                    <strong>Q: Why are there only 3 routes maximum?</strong><br>
+                    A: The OSRM API returns up to 3 feasible alternatives to keep the display clean and focus on the best options.
+                </div>
+
+                <div class="example-box">
+                    <strong>Q: Can I plan routes for walking or cycling?</strong><br>
+                    A: Currently, only driving routes are supported. The OSRM service focuses on car routing.
+                </div>
+
+                <div class="example-box">
+                    <strong>Q: What if no route is found?</strong><br>
+                    A: This happens when locations aren't connected by roads (e.g., different islands, blocked areas). Try nearby points that are road-accessible.
+                </div>
+
+                <h3>Technical Questions</h3>
+
+                <div class="example-box">
+                    <strong>Q: What APIs does this app use?</strong><br>
+                    A: <br>
+                    - OpenStreetMap for map tiles<br>
+                    - Nominatim for geocoding<br>
+                    - OSRM for routing<br>
+                    - pyproj for coordinate transformation
+                </div>
+
+                <div class="example-box">
+                    <strong>Q: Can I use this app offline?</strong><br>
+                    A: No, it requires internet connection to access map tiles and API services.
+                </div>
+
+                <div class="example-box">
+                    <strong>Q: Is my data stored anywhere?</strong><br>
+                    A: No, all processing happens in your session. No searches or conversions are saved.
+                </div>
+
+                <div class="info-box purple">
+                    <strong>Still have questions?</strong> The app is open-source! Check the code or reach out to the development community.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
